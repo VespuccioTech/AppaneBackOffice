@@ -4,14 +4,13 @@ require_once("config.php");
 $messaggio = $errore = '';
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 
-// 1. Salvataggio del nuovo menù settimanale
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_menu'])) {
     $ripub = $_POST['giorno_ripubblicazione'] ?? 'Mercoledì';
     $fine = $_POST['giorno_fine_ordinazioni'] ?? 'Venerdì';
     $prodotti_menu = $_POST['prodotti_menu'] ?? [];
+
     try {
         $pdo->beginTransaction();
-        // Aggiunta CURDATE() per popolare il campo 'data' correttamente
         $stmt = $pdo->prepare("INSERT INTO menu_settimanale (giorno_ripubblicazione, giorno_fine_ordinazioni, data) VALUES (?, ?, CURDATE())");
         $stmt->execute([$ripub, $fine]);
         $id_menu = $pdo->lastInsertId();
@@ -28,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_menu'])) {
     }
 }
 
-// 2. Lettura dei giorni attuali dal database per pre-impostare le tendine
 $giorno_ripub_attuale = 'Mercoledì';
 $giorno_fine_attuale = 'Venerdì';
 try {
@@ -39,11 +37,18 @@ try {
     }
 } catch (\PDOException $e) {}
 
-// 3. Estrazione dei prodotti per stamparli in pagina
+// Query aggiornata per estrarre anche l'immagine
 $prodotti_per_tipo = [];
-$sql = "SELECT p.*, GROUP_CONCAT(c.nome_ingrediente SEPARATOR ', ') as ingredienti FROM prodotto p LEFT JOIN composizione c ON p.nome = c.nome_prodotto GROUP BY p.nome";
+$sql = "SELECT p.*, 
+               GROUP_CONCAT(c.nome_ingrediente SEPARATOR ', ') as ingredienti,
+               (SELECT percorso_file FROM immagine_prodotto ip WHERE ip.nome_prodotto = p.nome LIMIT 1) as immagine
+        FROM prodotto p 
+        LEFT JOIN composizione c ON p.nome = c.nome_prodotto 
+        GROUP BY p.nome";
 $stmt = $pdo->query($sql);
-while ($row = $stmt->fetch()) { $prodotti_per_tipo[$row['tipo']][] = $row; }
+while ($row = $stmt->fetch()) { 
+    $prodotti_per_tipo[$row['tipo']][] = $row;
+}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -88,6 +93,10 @@ while ($row = $stmt->fetch()) { $prodotti_per_tipo[$row['tipo']][] = $row; }
                     <div class="grid-layout">
                         <?php foreach ($prodotti as $p): ?>
                             <div class="card">
+                                <?php if(!empty($p['immagine'])): ?>
+                                    <img src="<?php echo htmlspecialchars($p['immagine']); ?>" alt="<?php echo htmlspecialchars($p['nome']); ?>" style="width: 100%; height: 150px; object-fit: cover;">
+                                <?php endif; ?>
+
                                 <div class="card-header"><?php echo htmlspecialchars($p['nome']); ?> - €<?php echo htmlspecialchars($p['prezzo']); ?></div>
                                 <div style="padding: 15px; flex-grow: 1; font-size: 0.9rem;"><?php echo htmlspecialchars($p['descrizione'] ?? ''); ?></div>
                                 <div style="padding: 15px; background: #FFFAF4; border-top: 1px solid #D4A373; font-size: 0.8rem;">
