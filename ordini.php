@@ -1,5 +1,22 @@
 <?php
 require_once("config.php");
+
+$messaggio = '';
+
+// Gestione aggiornamento stato
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_stato'])) {
+    $id_ordine = $_POST['id_ordine'];
+    $nuovo_stato = $_POST['stato_ordine'];
+    
+    try {
+        $stmt_update = $pdo->prepare("UPDATE ordine SET stato = ? WHERE id_ordine = ?");
+        $stmt_update->execute([$nuovo_stato, $id_ordine]);
+        $messaggio = "Stato dell'ordine #$id_ordine aggiornato con successo!";
+    } catch (\PDOException $e) {
+        $messaggio = "Errore durante l'aggiornamento: " . $e->getMessage();
+    }
+}
+
 // Lettura variabili dinamiche giorni
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 $giorno_ripub_attuale = 'Mercoledì'; $giorno_fine_attuale = 'Venerdì';
@@ -12,14 +29,17 @@ try {
     }
 } catch (\PDOException $e) {}
 
-// Sostituito c.nome_cognome con c.nome, c.cognome
-$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.consegna_effettuata, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM ordine o JOIN indirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN registrazione r ON o.username_account = r.username_account JOIN cliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
+// Query aggiornata: richiede 'stato' al posto di 'consegna_effettuata'
+$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM ordine o JOIN indirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN registrazione r ON o.username_account = r.username_account JOIN cliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
 
 $tutti_prodotti = $pdo->query("SELECT id_ordine, nome_prodotto, quantita FROM selezione")->fetchAll();
 $prodotti_per_ordine = []; 
 foreach ($tutti_prodotti as $p) { 
     $prodotti_per_ordine[$p['id_ordine']][] = $p;
 }
+
+// Array con i possibili stati dell'ordine
+$stati_disponibili = ['In attesa', 'In preparazione', 'In fase di consegna', 'Consegnato', 'Annullato'];
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -41,13 +61,25 @@ foreach ($tutti_prodotti as $p) {
     </nav>
 
     <main class="content-area">
+        <?php if($messaggio): ?>
+            <div class='alert alert-success'><?php echo htmlspecialchars($messaggio); ?></div>
+        <?php endif; ?>
+
         <?php if (empty($ordini)): ?>
             <div style="text-align:center; padding: 50px; color: #8B4513; border: 2px dashed #D4A373;">Nessun ordine presente nel database.</div>
         <?php else: ?>
             <?php foreach ($ordini as $ordine): 
-                // Assegnazione diretta dai nuovi campi del database
                 $nome = $ordine['nome'] ?? '-'; 
                 $cognome = $ordine['cognome'] ?? '-';
+                $stato_corrente = $ordine['stato'] ?? 'In attesa';
+                
+                // Colori dinamici per lo stato
+                $colore_stato = '#4A3320'; // Default
+                if($stato_corrente == 'Consegnato') $colore_stato = '#79B473'; // Verde
+                if($stato_corrente == 'In attesa') $colore_stato = '#D6604D'; // Rosso/Arancio
+                if($stato_corrente == 'In preparazione') $colore_stato = '#F4A261'; // Arancione
+                if($stato_corrente == 'In fase di consegna') $colore_stato = '#2A9D8F'; // Ottanio
+                if($stato_corrente == 'Annullato') $colore_stato = '#888888'; // Grigio
             ?>
             <div class="order-card">
                 <div class="col-address">
@@ -60,13 +92,25 @@ foreach ($tutti_prodotti as $p) {
                         <div class="box"><span class="label">Nome</span><span class="value"><?php echo htmlspecialchars($nome); ?></span></div>
                         <div class="box"><span class="label">Cognome</span><span class="value"><?php echo htmlspecialchars($cognome); ?></span></div>
                     </div>
-                    <div class="box"><span class="label">Telefono</span><span class="value"><?php echo htmlspecialchars($ordine['n_telefono']??'-'); ?></span></div>
                     <div class="split-row">
+                        <div class="box"><span class="label">Telefono</span><span class="value"><?php echo htmlspecialchars($ordine['n_telefono']??'-'); ?></span></div>
                         <div class="box"><span class="label">Data Ordine</span><span class="value"><?php echo date('d/m/y H:i', strtotime($ordine['data'])); ?></span></div>
-                        <div class="box"><span class="label">Accettato</span><span class="status-indicator <?php echo $ordine['consegna_effettuata']?'status-G':'status-R'; ?>"><?php echo $ordine['consegna_effettuata']?'G':'R'; ?></span></div>
                     </div>
-                    <div class="box" style="background:#FFFAF4;"><span class="label">Stato</span><span class="value" style="color:<?php echo $ordine['consegna_effettuata']?'#79B473':'#D6604D'; ?>;"><?php echo $ordine['consegna_effettuata']?'Concluso':'In attesa'; ?></span></div>
+                    
+                    <div class="box" style="background:#FFFAF4; flex-direction: row; gap: 15px;">
+                        <span class="label" style="margin-bottom: 0; line-height: 35px;">Stato:</span>
+                        <form method="POST" style="display: flex; gap: 10px; margin: 0;">
+                            <input type="hidden" name="id_ordine" value="<?php echo $ordine['id_ordine']; ?>">
+                            <select name="stato_ordine" class="form-control" style="margin-bottom: 0; padding: 5px; font-weight: bold; color: <?php echo $colore_stato; ?>;">
+                                <?php foreach($stati_disponibili as $s): ?>
+                                    <option value="<?php echo $s; ?>" <?php if($s == $stato_corrente) echo 'selected'; ?>><?php echo $s; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="submit" name="aggiorna_stato" class="btn btn-purple" style="padding: 5px 15px;">Aggiorna</button>
+                        </form>
+                    </div>
                 </div>
+                
                 <div class="col-products">
                     <table class="prod-table">
                         <tr><th>PRODOTTO</th><th style="width: 50px;">Q.</th></tr>
