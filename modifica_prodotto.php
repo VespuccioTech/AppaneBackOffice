@@ -35,6 +35,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['salva_modifiche'])) {
             }
         }
 
+        // --- INIZIO GESTIONE IMMAGINE ---
+        if (isset($_FILES['nuova_immagine']) && $_FILES['nuova_immagine']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'uploads/prodotti/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+
+            $nome_file = uniqid() . "_" . basename($_FILES['nuova_immagine']['name']);
+            $destinazione = $upload_dir . $nome_file;
+
+            if (move_uploaded_file($_FILES['nuova_immagine']['tmp_name'], $destinazione)) {
+                // Recuperiamo la vecchia immagine per eliminarla fisicamente dal server
+                $stmt_old_img = $pdo->prepare("SELECT percorso_file FROM timmagine_prodotto WHERE nome_prodotto = ?");
+                $stmt_old_img->execute([$nome_prodotto]);
+                $old_images = $stmt_old_img->fetchAll(PDO::FETCH_COLUMN);
+                
+                foreach ($old_images as $old_img) {
+                    if (file_exists($old_img)) {
+                        unlink($old_img); // Elimina il file fisico
+                    }
+                }
+
+                // Eliminiamo i vecchi record dal database
+                $stmt_del_img = $pdo->prepare("DELETE FROM timmagine_prodotto WHERE nome_prodotto = ?");
+                $stmt_del_img->execute([$nome_prodotto]);
+
+                // Inseriamo la nuova immagine
+                $stmt_ins_img = $pdo->prepare("INSERT INTO timmagine_prodotto (nome_prodotto, percorso_file) VALUES (?, ?)");
+                $stmt_ins_img->execute([$nome_prodotto, $destinazione]);
+            }
+        }
+        // --- FINE GESTIONE IMMAGINE ---
+
         $pdo->commit();
         $messaggio = "Prodotto aggiornato con successo!";
     } catch (\PDOException $e) {
@@ -56,6 +87,11 @@ if (!$prodotto_attuale) {
 $stmt_comp = $pdo->prepare("SELECT nome_ingrediente FROM tcomposizione WHERE nome_prodotto = ?");
 $stmt_comp->execute([$nome_prodotto]);
 $ingredienti_attuali = $stmt_comp->fetchAll(PDO::FETCH_COLUMN);
+
+// Recupero l'immagine attuale del prodotto
+$stmt_img = $pdo->prepare("SELECT percorso_file FROM timmagine_prodotto WHERE nome_prodotto = ? LIMIT 1");
+$stmt_img->execute([$nome_prodotto]);
+$immagine_attuale = $stmt_img->fetchColumn();
 
 // Recupero TUTTI gli ingredienti disponibili per mostrare la lista
 $tutti_ingredienti = $pdo->query("SELECT nome FROM tingrediente ORDER BY nome ASC")->fetchAll();
@@ -98,7 +134,20 @@ $tutti_ingredienti = $pdo->query("SELECT nome FROM tingrediente ORDER BY nome AS
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="">
+            <form method="POST" action="" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-col" style="text-align: center; background: #FFFAF4; padding: 15px; border-radius: 8px; border: 1px dashed #D4A373;">
+                        <label class="form-label">Immagine Attuale</label>
+                        <?php if ($immagine_attuale): ?>
+                            <img src="<?php echo htmlspecialchars($immagine_attuale); ?>" alt="Immagine prodotto" style="max-width: 200px; height: auto; border-radius: 8px; border: 2px solid #D4A373; margin-bottom: 10px;">
+                        <?php else: ?>
+                            <p style="color: #888; font-size: 0.9rem; margin-bottom: 10px;">Nessuna immagine presente.</p>
+                        <?php endif; ?>
+                        
+                        <label class="form-label" style="margin-top: 10px;">Sostituisci Immagine (lascia vuoto per non modificare)</label>
+                        <input type="file" name="nuova_immagine" accept="image/*" class="form-control" style="padding: 9px; width: 80%; margin: 0 auto;">
+                    </div>
+                </div>
                 <div class="form-row">
                     <div class="form-col">
                         <label class="form-label">Nome Prodotto (Non modificabile)</label>
