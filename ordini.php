@@ -32,7 +32,7 @@ try {
 // Query aggiornata: richiede 'stato' al posto di 'consegna_effettuata'
 $ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM tordine o JOIN tindirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN tregistrazione r ON o.username_account = r.username_account JOIN tcliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
 
-$tutti_prodotti = $pdo->query("SELECT id_ordine, nome_prodotto, quantita FROM selezione")->fetchAll();
+$tutti_prodotti = $pdo->query("SELECT id_ordine, nome_prodotto, quantita FROM tselezione")->fetchAll();
 $prodotti_per_ordine = []; 
 foreach ($tutti_prodotti as $p) { 
     $prodotti_per_ordine[$p['id_ordine']][] = $p;
