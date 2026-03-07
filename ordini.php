@@ -2,12 +2,10 @@
 require_once("config.php");
 
 $messaggio = '';
-
 // Gestione aggiornamento stato
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_stato'])) {
     $id_ordine = $_POST['id_ordine'];
     $nuovo_stato = $_POST['stato_ordine'];
-    
     try {
         $stmt_update = $pdo->prepare("UPDATE tordine SET stato = ? WHERE id_ordine = ?");
         $stmt_update->execute([$nuovo_stato, $id_ordine]);
@@ -20,7 +18,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_stato'])) {
 // Lettura variabili dinamiche giorni
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 $giorno_ripub_attuale = 'Mercoledì'; $giorno_fine_attuale = 'Venerdì';
-
 try {
     $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
     if ($menu_attuale) {
@@ -29,11 +26,11 @@ try {
     }
 } catch (\PDOException $e) {}
 
-// Query aggiornata: richiede 'stato' al posto di 'consegna_effettuata'
-$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM tordine o JOIN tindirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN tregistrazione r ON o.username_account = r.username_account JOIN tcliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
+// Query aggiornata: aggiunta colonna o.importo e prefissi "t" alle tabelle
+$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, o.importo, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM tordine o JOIN tindirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN tregistrazione r ON o.username_account = r.username_account JOIN tcliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
 
 $tutti_prodotti = $pdo->query("SELECT id_ordine, nome_prodotto, quantita FROM tselezione")->fetchAll();
-$prodotti_per_ordine = []; 
+$prodotti_per_ordine = [];
 foreach ($tutti_prodotti as $p) { 
     $prodotti_per_ordine[$p['id_ordine']][] = $p;
 }
@@ -95,6 +92,7 @@ $stati_disponibili = ['In attesa', 'In preparazione', 'In fase di consegna', 'Co
                     <div class="split-row">
                         <div class="box"><span class="label">Telefono</span><span class="value"><?php echo htmlspecialchars($ordine['n_telefono']??'-'); ?></span></div>
                         <div class="box"><span class="label">Data Ordine</span><span class="value"><?php echo date('d/m/y H:i', strtotime($ordine['data'])); ?></span></div>
+                        <div class="box"><span class="label">Totale</span><span class="value" style="color: #5E3A8C; font-weight: bold;">€<?php echo number_format($ordine['importo'], 2); ?></span></div>
                     </div>
                     
                     <div class="box" style="background:#FFFAF4; flex-direction: row; gap: 15px;">
