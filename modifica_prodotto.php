@@ -1,0 +1,144 @@
+<?php
+require_once("config.php");
+
+$messaggio = '';
+$errore = '';
+
+// 1. Controllo se è stato passato il nome del prodotto
+if (!isset($_GET['nome']) || empty($_GET['nome'])) {
+    die("<div style='text-align:center; margin-top:50px;'>Errore: Nessun prodotto selezionato. <a href='index.php'>Torna alla dashboard</a></div>");
+}
+
+$nome_prodotto = $_GET['nome'];
+
+// 2. Gestione del salvataggio delle modifiche (Metodo POST)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['salva_modifiche'])) {
+    $nuovo_prezzo = str_replace(',', '.', $_POST['prezzo']); // Accetta sia virgola che punto
+    $nuova_descrizione = trim($_POST['descrizione']);
+    $nuovi_ingredienti = $_POST['ingredienti'] ?? []; // Array degli ingredienti selezionati
+
+    try {
+        $pdo->beginTransaction();
+
+        // Aggiorniamo i dati base del prodotto
+        $stmt_update = $pdo->prepare("UPDATE tprodotto SET prezzo = ?, descrizione = ? WHERE nome = ?");
+        $stmt_update->execute([$nuovo_prezzo, $nuova_descrizione, $nome_prodotto]);
+
+        // Aggiorniamo la composizione (cancelliamo i vecchi e inseriamo i nuovi)
+        $stmt_delete_comp = $pdo->prepare("DELETE FROM tcomposizione WHERE nome_prodotto = ?");
+        $stmt_delete_comp->execute([$nome_prodotto]);
+
+        if (!empty($nuovi_ingredienti)) {
+            $stmt_insert_comp = $pdo->prepare("INSERT INTO tcomposizione (nome_prodotto, nome_ingrediente) VALUES (?, ?)");
+            foreach ($nuovi_ingredienti as $ingrediente) {
+                $stmt_insert_comp->execute([$nome_prodotto, $ingrediente]);
+            }
+        }
+
+        $pdo->commit();
+        $messaggio = "Prodotto aggiornato con successo!";
+    } catch (\PDOException $e) {
+        $pdo->rollBack();
+        $errore = "Errore durante l'aggiornamento: " . $e->getMessage();
+    }
+}
+
+// 3. Recupero i dati attuali del prodotto per precompilare il form
+$stmt_prod = $pdo->prepare("SELECT * FROM tprodotto WHERE nome = ?");
+$stmt_prod->execute([$nome_prodotto]);
+$prodotto_attuale = $stmt_prod->fetch();
+
+if (!$prodotto_attuale) {
+    die("<div style='text-align:center; margin-top:50px;'>Errore: Prodotto non trovato. <a href='index.php'>Torna alla dashboard</a></div>");
+}
+
+// Recupero gli ingredienti attuali (per spuntare le checkbox)
+$stmt_comp = $pdo->prepare("SELECT nome_ingrediente FROM tcomposizione WHERE nome_prodotto = ?");
+$stmt_comp->execute([$nome_prodotto]);
+$ingredienti_attuali = $stmt_comp->fetchAll(PDO::FETCH_COLUMN);
+
+// Recupero TUTTI gli ingredienti disponibili per mostrare la lista
+$tutti_ingredienti = $pdo->query("SELECT nome FROM tingrediente ORDER BY nome ASC")->fetchAll();
+?>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifica Prodotto - Appane</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="dashboard-wrapper">
+    <header class="main-header">
+        <a href="index.php" class="logo-link"><h1 style="color:white; margin:0;">APPANE BACKOFFICE</h1></a>
+        <div class="nav-title">MODIFICA PRODOTTO</div>
+    </header>
+
+    <nav class="sub-nav">
+        <div><a href="index.php" style="color: #5E3A8C; font-weight: bold; text-decoration: none;">← Torna alla Dashboard</a></div>
+    </nav>
+
+    <main class="content-area">
+        <div class="form-container">
+            <h2 style="color: #8B4513; text-align: center; margin-bottom: 20px;">Modifica: <?php echo htmlspecialchars($prodotto_attuale['nome']); ?></h2>
+            
+            <?php if ($messaggio): ?>
+                <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; border: 1px solid #c3e6cb;">
+                    <?php echo $messaggio; ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($errore): ?>
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; border: 1px solid #f5c6cb;">
+                    <?php echo $errore; ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Nome Prodotto (Non modificabile)</label>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($prodotto_attuale['nome']); ?>" readonly style="background-color: #f8f9fa; color: #6c757d; cursor: not-allowed;">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Prezzo (€)</label>
+                        <input type="number" step="0.01" name="prezzo" class="form-control" value="<?php echo htmlspecialchars($prodotto_attuale['prezzo']); ?>" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Descrizione</label>
+                        <textarea name="descrizione" class="form-control" rows="4" required><?php echo htmlspecialchars($prodotto_attuale['descrizione']); ?></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Ingredienti (Seleziona per modificare la composizione)</label>
+                        <div style="border: 1px solid #D4A373; padding: 15px; border-radius: 5px; max-height: 200px; overflow-y: auto; background: #FFFAF4;">
+                            <?php if (empty($tutti_ingredienti)): ?>
+                                <em>Nessun ingrediente nel database. Aggiungili prima dall'apposita sezione.</em>
+                            <?php else: ?>
+                                <?php foreach ($tutti_ingredienti as $ing): 
+                                    $checked = in_array($ing['nome'], $ingredienti_attuali) ? 'checked' : '';
+                                ?>
+                                    <label style="display: block; margin-bottom: 8px; cursor: pointer;">
+                                        <input type="checkbox" name="ingredienti[]" value="<?php echo htmlspecialchars($ing['nome']); ?>" <?php echo $checked; ?>>
+                                        <?php echo htmlspecialchars($ing['nome']); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" name="salva_modifiche" class="btn btn-purple" style="font-size: 1.1rem; padding: 10px 30px;">💾 Salva Modifiche</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

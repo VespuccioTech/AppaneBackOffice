@@ -66,7 +66,6 @@ while ($row = $stmt->fetch()) {
 
     <form action="" method="POST" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
         <nav class="sub-nav">
-            <div><a href="#" style="color: #5E3A8C; font-weight: bold; text-decoration: none;">✏️ Modifica un prodotto</a></div>
             <div>
                 <label>Ripubblicazione menù: </label>
                 <select name="giorno_ripubblicazione">
@@ -101,9 +100,10 @@ while ($row = $stmt->fetch()) {
                                 <div style="padding: 15px; flex-grow: 1; font-size: 0.9rem;"><?php echo htmlspecialchars($p['descrizione'] ?? ''); ?></div>
                                 <div style="padding: 15px; background: #FFFAF4; border-top: 1px solid #D4A373; font-size: 0.8rem;">
                                     <strong>Ing:</strong> <?php echo htmlspecialchars($p['ingredienti'] ?? 'Nessuno'); ?>
-                                    <div style="margin-top: 10px;">
-                                        <label><input type="checkbox" name="prodotti_menu[]" value="<?php echo htmlspecialchars($p['nome']); ?>"> Includi nel menù</label>
-                                    </div>
+                                <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                    <label><input type="checkbox" name="prodotti_menu[]" value="<?php echo htmlspecialchars($p['nome']); ?>"> Includi nel menù</label>
+                                    <a href="modifica_prodotto.php?nome=<?php echo urlencode($p['nome']); ?>" style="background: #5E3A8C; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 0.8rem; font-weight: bold;">✏️ Modifica</a>
+                                </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
