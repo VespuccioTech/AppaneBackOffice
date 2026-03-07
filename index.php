@@ -11,12 +11,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_menu'])) {
 
     try {
         $pdo->beginTransaction();
-        $stmt = $pdo->prepare("INSERT INTO menu_settimanale (giorno_ripubblicazione, giorno_fine_ordinazioni, data) VALUES (?, ?, CURDATE())");
+        $stmt = $pdo->prepare("INSERT INTO tmenu_settimanale (giorno_ripubblicazione, giorno_fine_ordinazioni, data) VALUES (?, ?, CURDATE())");
         $stmt->execute([$ripub, $fine]);
         $id_menu = $pdo->lastInsertId();
 
         if (!empty($prodotti_menu)) {
-            $stmt_prod = $pdo->prepare("INSERT INTO produzione (nome_prodotto, id_menu) VALUES (?, ?)");
+            $stmt_prod = $pdo->prepare("INSERT INTO tproduzione (nome_prodotto, id_menu) VALUES (?, ?)");
             foreach ($prodotti_menu as $p_nome) { $stmt_prod->execute([$p_nome, $id_menu]); }
         }
         $pdo->commit();
@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_menu'])) {
 $giorno_ripub_attuale = 'Mercoledì';
 $giorno_fine_attuale = 'Venerdì';
 try {
-    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM menu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
+    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
     if ($menu_attuale) {
         if(!empty($menu_attuale['giorno_ripubblicazione'])) $giorno_ripub_attuale = $menu_attuale['giorno_ripubblicazione'];
         if(!empty($menu_attuale['giorno_fine_ordinazioni'])) $giorno_fine_attuale = $menu_attuale['giorno_fine_ordinazioni'];
@@ -41,9 +41,9 @@ try {
 $prodotti_per_tipo = [];
 $sql = "SELECT p.*, 
                GROUP_CONCAT(c.nome_ingrediente SEPARATOR ', ') as ingredienti,
-               (SELECT percorso_file FROM immagine_prodotto ip WHERE ip.nome_prodotto = p.nome LIMIT 1) as immagine
-        FROM prodotto p 
-        LEFT JOIN composizione c ON p.nome = c.nome_prodotto 
+               (SELECT percorso_file FROM timmagine_prodotto ip WHERE ip.nome_prodotto = p.nome LIMIT 1) as immagine
+        FROM tprodotto p 
+        LEFT JOIN tcomposizione c ON p.nome = c.nome_prodotto 
         GROUP BY p.nome";
 $stmt = $pdo->query($sql);
 while ($row = $stmt->fetch()) { 

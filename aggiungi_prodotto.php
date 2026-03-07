@@ -14,11 +14,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         try {
             $pdo->beginTransaction();
-            $stmt = $pdo->prepare("INSERT INTO prodotto (nome, tipo, prezzo, descrizione) VALUES (?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO tprodotto (nome, tipo, prezzo, descrizione) VALUES (?, ?, ?, ?)");
             $stmt->execute([$nome, $tipo, $prezzo, $descrizione]);
             
             if (!empty($ingredienti_selezionati)) {
-                $stmt_comp = $pdo->prepare("INSERT INTO composizione (nome_prodotto, nome_ingrediente) VALUES (?, ?)");
+                $stmt_comp = $pdo->prepare("INSERT INTO tcomposizione (nome_prodotto, nome_ingrediente) VALUES (?, ?)");
                 foreach ($ingredienti_selezionati as $ing) { $stmt_comp->execute([$nome, $ing]); }
             }
 
@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $upload_dir = 'uploads/prodotti/';
                 if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
                 
-                $stmt_img = $pdo->prepare("INSERT INTO immagine_prodotto (nome_prodotto, percorso_file) VALUES (?, ?)");
+                $stmt_img = $pdo->prepare("INSERT INTO timmagine_prodotto (nome_prodotto, percorso_file) VALUES (?, ?)");
                 for($i = 0; $i < count($_FILES['immagini_prodotto']['name']); $i++){
                     $nome_file = uniqid() . "_" . basename($_FILES['immagini_prodotto']['name'][$i]);
                     $destinazione = $upload_dir . $nome_file;
@@ -45,11 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
-$lista_ingredienti = $pdo->query("SELECT nome FROM ingrediente ORDER BY nome")->fetchAll();
+$lista_ingredienti = $pdo->query("SELECT nome FROM tingrediente ORDER BY nome")->fetchAll();
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 $giorno_ripub_attuale = 'Mercoledì'; $giorno_fine_attuale = 'Venerdì';
 try {
-    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM menu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
+    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
     if ($menu_attuale) {
         if(!empty($menu_attuale['giorno_ripubblicazione'])) $giorno_ripub_attuale = $menu_attuale['giorno_ripubblicazione'];
         if(!empty($menu_attuale['giorno_fine_ordinazioni'])) $giorno_fine_attuale = $menu_attuale['giorno_fine_ordinazioni'];

@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     else {
         try {
             $pdo->beginTransaction();
-            $stmt = $pdo->prepare("INSERT INTO ingrediente (nome, tipo, descrizione) VALUES (?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO tingrediente (nome, tipo, descrizione) VALUES (?, ?, ?)");
             $stmt->execute([$nome, $tipo, $descrizione]);
 
             // Salvataggio Immagini
@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $upload_dir = 'uploads/ingredienti/';
                 if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
                 
-                $stmt_img = $pdo->prepare("INSERT INTO immagine_ingrediente (nome_ingrediente, percorso_file) VALUES (?, ?)");
+                $stmt_img = $pdo->prepare("INSERT INTO timmagine_ingrediente (nome_ingrediente, percorso_file) VALUES (?, ?)");
                 for($i = 0; $i < count($_FILES['immagini_ingrediente']['name']); $i++){
                     $nome_file = uniqid() . "_" . basename($_FILES['immagini_ingrediente']['name'][$i]);
                     $destinazione = $upload_dir . $nome_file;
@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 $giorno_ripub_attuale = 'Mercoledì'; $giorno_fine_attuale = 'Venerdì';
 try {
-    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM menu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
+    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
     if ($menu_attuale) {
         if(!empty($menu_attuale['giorno_ripubblicazione'])) $giorno_ripub_attuale = $menu_attuale['giorno_ripubblicazione'];
         if(!empty($menu_attuale['giorno_fine_ordinazioni'])) $giorno_fine_attuale = $menu_attuale['giorno_fine_ordinazioni'];

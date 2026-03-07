@@ -9,7 +9,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_stato'])) {
     $nuovo_stato = $_POST['stato_ordine'];
     
     try {
-        $stmt_update = $pdo->prepare("UPDATE ordine SET stato = ? WHERE id_ordine = ?");
+        $stmt_update = $pdo->prepare("UPDATE tordine SET stato = ? WHERE id_ordine = ?");
         $stmt_update->execute([$nuovo_stato, $id_ordine]);
         $messaggio = "Stato dell'ordine #$id_ordine aggiornato con successo!";
     } catch (\PDOException $e) {
@@ -22,7 +22,7 @@ $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'
 $giorno_ripub_attuale = 'Mercoledì'; $giorno_fine_attuale = 'Venerdì';
 
 try {
-    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM menu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
+    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
     if ($menu_attuale) {
         if(!empty($menu_attuale['giorno_ripubblicazione'])) $giorno_ripub_attuale = $menu_attuale['giorno_ripubblicazione'];
         if(!empty($menu_attuale['giorno_fine_ordinazioni'])) $giorno_fine_attuale = $menu_attuale['giorno_fine_ordinazioni'];
@@ -30,7 +30,7 @@ try {
 } catch (\PDOException $e) {}
 
 // Query aggiornata: richiede 'stato' al posto di 'consegna_effettuata'
-$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM ordine o JOIN indirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN registrazione r ON o.username_account = r.username_account JOIN cliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
+$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM tordine o JOIN tindirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN tregistrazione r ON o.username_account = r.username_account JOIN tcliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
 
 $tutti_prodotti = $pdo->query("SELECT id_ordine, nome_prodotto, quantita FROM selezione")->fetchAll();
 $prodotti_per_ordine = []; 
