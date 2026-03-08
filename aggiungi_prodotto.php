@@ -64,7 +64,11 @@ try {
     <header class="main-header">
         <a href="index.php" class="logo-link"><img src="appane logo.jpg" alt="Logo Appane" style="height: 70px;"></a>
         <div class="nav-title">AGGIUNGI NUOVO PRODOTTO</div>
-        <div class="header-nav-group"><a href="ordini.php" style="color: white; font-weight: bold;">VISUALIZZAZIONE ORDINI</a><a href="ingredienti.php" style="color: #E9D5FF; font-weight: bold; font-size: 0.85rem;">LISTA INGREDIENTI</a></div>
+        <div class="header-nav-group">
+            <a href="ordini.php" style="color: white; font-weight: bold;">VISUALIZZAZIONE ORDINI</a>
+            <a href="ingredienti.php" style="color: #E9D5FF; font-weight: bold; font-size: 0.85rem;">LISTA INGREDIENTI</a>
+            <a href="clienti.php" style="color: #E9D5FF; font-weight: bold; font-size: 0.85rem;">LISTA CLIENTI</a>
+        </div>
     </header>
 
     <nav class="sub-nav">
