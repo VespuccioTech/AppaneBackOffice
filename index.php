@@ -29,11 +29,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_menu'])) {
 
 $giorno_ripub_attuale = 'Mercoledì';
 $giorno_fine_attuale = 'Venerdì';
+$prodotti_attivi = []; // Nuovo array per memorizzare i prodotti già nel menù
+
 try {
-    $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
+    // Aggiunto 'id_menu' alla SELECT
+    $menu_attuale = $pdo->query("SELECT id_menu, giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
     if ($menu_attuale) {
         if(!empty($menu_attuale['giorno_ripubblicazione'])) $giorno_ripub_attuale = $menu_attuale['giorno_ripubblicazione'];
         if(!empty($menu_attuale['giorno_fine_ordinazioni'])) $giorno_fine_attuale = $menu_attuale['giorno_fine_ordinazioni'];
+        
+        // Recupero i prodotti attualmente associati all'ultimo menù
+        $stmt_prod_attivi = $pdo->prepare("SELECT nome_prodotto FROM tproduzione WHERE id_menu = ?");
+        $stmt_prod_attivi->execute([$menu_attuale['id_menu']]);
+        $prodotti_attivi = $stmt_prod_attivi->fetchAll(PDO::FETCH_COLUMN); // Restituisce un array semplice di nomi
     }
 } catch (\PDOException $e) {}
 
@@ -101,7 +109,7 @@ while ($row = $stmt->fetch()) {
                                 <div style="padding: 15px; background: #FFFAF4; border-top: 1px solid #D4A373; font-size: 0.8rem;">
                                     <strong>Ing:</strong> <?php echo htmlspecialchars($p['ingredienti'] ?? 'Nessuno'); ?>
                                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                                    <label><input type="checkbox" name="prodotti_menu[]" value="<?php echo htmlspecialchars($p['nome']); ?>"> Includi nel menù</label>
+                                    <label><input type="checkbox" name="prodotti_menu[]" value="<?php echo htmlspecialchars($p['nome']); ?>" <?php echo in_array($p['nome'], $prodotti_attivi) ? 'checked' : ''; ?>> Includi nel menù</label>
                                     <a href="modifica_prodotto.php?nome=<?php echo urlencode($p['nome']); ?>" style="background: #5E3A8C; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 0.8rem; font-weight: bold;">✏️ Modifica</a>
                                 </div>
                                 </div>
