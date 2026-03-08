@@ -15,6 +15,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_stato'])) {
     }
 }
 
+// Gestione aggiornamento note
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_note'])) {
+    $id_ordine = $_POST['id_ordine'];
+    $note = trim($_POST['note_ordine']);
+    try {
+        $stmt_note = $pdo->prepare("UPDATE tordine SET note = ? WHERE id_ordine = ?");
+        $stmt_note->execute([$note, $id_ordine]);
+        $messaggio = "Note dell'ordine #$id_ordine salvate con successo!";
+    } catch (\PDOException $e) {
+        $messaggio = "Errore durante il salvataggio delle note: " . $e->getMessage();
+    }
+}
+
 // Lettura variabili dinamiche giorni
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 $giorno_ripub_attuale = 'Mercoledì'; $giorno_fine_attuale = 'Venerdì';
@@ -27,7 +40,7 @@ try {
 } catch (\PDOException $e) {}
 
 // Query aggiornata: aggiunta colonna o.importo e prefissi "t" alle tabelle
-$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, o.importo, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM tordine o JOIN tindirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN tregistrazione r ON o.username_account = r.username_account JOIN tcliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
+$ordini = $pdo->query("SELECT o.id_ordine, o.data, o.stato, o.importo, o.note, i.citta, i.via, i.n_civico, c.nome, c.cognome, c.n_telefono FROM tordine o JOIN tindirizzo_di_consegna i ON o.id_indirizzo = i.id_indirizzo JOIN tregistrazione r ON o.username_account = r.username_account JOIN tcliente c ON r.email_cliente = c.email ORDER BY o.data DESC")->fetchAll();
 
 $tutti_prodotti = $pdo->query("SELECT id_ordine, nome_prodotto, quantita FROM tselezione")->fetchAll();
 $prodotti_per_ordine = [];
@@ -109,6 +122,15 @@ $stati_disponibili = ['In attesa', 'In preparazione', 'In fase di consegna', 'Co
                                 <?php endforeach; ?>
                             </select>
                             <button type="submit" name="aggiorna_stato" class="btn btn-purple" style="padding: 5px 15px;">Aggiorna</button>
+                        </form>
+                    </div>
+
+                    <div class="box" style="background:#FFF8E7; flex-direction: column; align-items: stretch; border-top: 2px solid #D4A373; border-bottom: none;">
+                        <span class="label" style="text-align: left; margin-bottom: 5px;">Note per il cliente:</span>
+                        <form method="POST" style="display: flex; gap: 10px; margin: 0;">
+                            <input type="hidden" name="id_ordine" value="<?php echo $ordine['id_ordine']; ?>">
+                            <textarea name="note_ordine" class="form-control" rows="2" placeholder="Scrivi un messaggio al cliente..." style="margin-bottom: 0; flex-grow: 1; resize: vertical; padding: 8px; font-size: 0.9rem;"><?php echo htmlspecialchars($ordine['note'] ?? ''); ?></textarea>
+                            <button type="submit" name="aggiorna_note" class="btn btn-bread" style="padding: 5px 15px;">Salva Note</button>
                         </form>
                     </div>
                 </div>
