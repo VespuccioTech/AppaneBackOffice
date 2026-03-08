@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 $lista_ingredienti = $pdo->query("SELECT nome FROM tingrediente ORDER BY nome")->fetchAll();
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
-$giorno_ripub_attuale = 'Mercoledì'; $giorno_fine_attuale = 'Venerdì';
+$giorno_ripub_attuale = 'Giovedì'; $giorno_fine_attuale = 'Venerdì';
 try {
     $menu_attuale = $pdo->query("SELECT giorno_ripubblicazione, giorno_fine_ordinazioni FROM tmenu_settimanale ORDER BY id_menu DESC LIMIT 1")->fetch();
     if ($menu_attuale) {

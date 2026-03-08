@@ -5,7 +5,7 @@ $messaggio = $errore = '';
 $giorni_settimana = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_menu'])) {
-    $ripub = $_POST['giorno_ripubblicazione'] ?? 'Mercoledì';
+    $ripub = $_POST['giorno_ripubblicazione'] ?? 'Giovedì';
     $fine = $_POST['giorno_fine_ordinazioni'] ?? 'Venerdì';
     $prodotti_menu = $_POST['prodotti_menu'] ?? [];
 
@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aggiorna_menu'])) {
     }
 }
 
-$giorno_ripub_attuale = 'Mercoledì';
+$giorno_ripub_attuale = 'Giovedì';
 $giorno_fine_attuale = 'Venerdì';
 $prodotti_attivi = []; // Nuovo array per memorizzare i prodotti già nel menù
 
