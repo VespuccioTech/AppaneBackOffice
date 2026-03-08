@@ -37,6 +37,7 @@ foreach ($tutti_indirizzi as $ind) {
             <a href="ordini.php" style="color: white; font-weight: bold;">VISUALIZZAZIONE ORDINI</a>
             <a href="ingredienti.php" style="color: #E9D5FF; font-weight: bold; font-size: 0.85rem;">LISTA INGREDIENTI</a>
             <a href="clienti.php" style="color: #E9D5FF; font-weight: bold; font-size: 0.85rem;">LISTA CLIENTI</a>
+            <a href="riepiloghi.php" style="color: #FFD700; font-weight: bold; font-size: 0.85rem;">RIEPILOGO INCASSI</a>
         </div>
     </header>
 
