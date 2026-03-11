@@ -14,20 +14,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt = $pdo->prepare("INSERT INTO tingrediente (nome, tipo, descrizione) VALUES (?, ?, ?)");
             $stmt->execute([$nome, $tipo, $descrizione]);
 
-            // Salvataggio Immagini
-            if (!empty($_FILES['immagini_ingrediente']['name'][0])) {
-                $upload_dir = 'uploads/ingredienti/';
-                if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-                
-                $stmt_img = $pdo->prepare("INSERT INTO timmagine_ingrediente (nome_ingrediente, percorso_file) VALUES (?, ?)");
-                for($i = 0; $i < count($_FILES['immagini_ingrediente']['name']); $i++){
-                    $nome_file = uniqid() . "_" . basename($_FILES['immagini_ingrediente']['name'][$i]);
-                    $destinazione = $upload_dir . $nome_file;
-                    if(move_uploaded_file($_FILES['immagini_ingrediente']['tmp_name'][$i], $destinazione)){
-                        $stmt_img->execute([$nome, $destinazione]);
-                    }
-                }
-            }
             $pdo->commit();
             $messaggio = "Ingrediente '$nome' aggiunto con successo!";
         } catch (\PDOException $e) { 
@@ -73,38 +59,34 @@ try {
         <div class="form-container">
             <?php if($messaggio) echo "<div class='alert alert-success'>$messaggio</div>"; ?>
             <?php if($errore) echo "<div class='alert alert-error'>$errore</div>"; ?>
-            <form action="" method="POST" enctype="multipart/form-data">
-                <div style="background: #FFF8E7; border-left: 4px solid #F4A261; padding: 15px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9rem; color: #4A3320;">
-                    <strong>💡 Come inserire le varianti (es. Farine):</strong> Il nome dell'ingrediente deve essere unico. Se aggiungi più tipi di uno stesso prodotto, specificalo direttamente nel nome. <br>
-                    <em>✅ Corretto: "Farina Tipo 0", "Farina Integrale".<br>
-                    ❌ Sbagliato: Chiamarle tutte "Farina".</em>
-                </div>
+            <form action="" method="POST"> <div style="background: #FFF8E7; border-left: 4px solid #F4A261; padding: 15px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9rem; color: #4A3320;">
+                <strong>💡 Come inserire le varianti (es. Farine):</strong> Il nome dell'ingrediente deve essere unico. Se aggiungi più tipi di uno stesso prodotto, specificalo direttamente nel nome. <br>
+                <em>✅ Corretto: "Farina Tipo 0", "Farina Integrale".<br>
+                ❌ Sbagliato: Chiamarle tutte "Farina".</em>
+            </div>
 
-                <div class="form-row">
-                    <div class="form-col" style="align-items: center;">
-                        <label class="form-label">Nome Ingrediente (Univoco)</label>
-                        <input type="text" name="nome_ingrediente" class="form-control" style="width: 60%; text-align: center;" placeholder="Es. Farina Tipo 0, Farina integrale, Sale, Lievito..." required>
-                    </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <label class="form-label">Nome Ingrediente (Univoco)</label>
+                    <input type="text" name="nome_ingrediente" class="form-control" placeholder="Es. Farina Barilla, Farina integrale, Lievito..." required>
                 </div>
-                
-                <div class="form-row">
-                    <div class="form-col">
-                        <label class="form-label">Categoria / Tipo (Opzionale)</label>
-                        <input type="text" name="tipo_ingrediente" class="form-control" placeholder="Es. Tipo 0, Integrale...">
-                    </div>
+                <div class="form-col">
+                    <label class="form-label">Categoria / Tipo (Opzionale)</label>
+                    <input type="text" name="tipo_ingrediente" class="form-control" placeholder="Es. Tipo 0, Integrale...">
                 </div>
-                
-                <div class="form-row">
-                    <div class="form-col">
-                        <label class="form-label">Descrizione</label>
-                        <textarea name="descrizione" class="form-control" rows="4"></textarea>
-                    </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <label class="form-label">Descrizione</label>
+                    <textarea name="descrizione" class="form-control" rows="4"></textarea>
                 </div>
-                
-                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-                    <button type="submit" class="btn btn-purple">Salva Ingrediente</button>
-                </div>
-            </form>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button type="submit" class="btn btn-purple">Salva Ingrediente</button>
+            </div>
+        </form>
         </div>
     </main>
 </div>
