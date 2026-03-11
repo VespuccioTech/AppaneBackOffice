@@ -13,16 +13,16 @@ $nome_prodotto = $_GET['nome'];
 
 // 2. Gestione del salvataggio delle modifiche (Metodo POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['salva_modifiche'])) {
-    $nuovo_prezzo = str_replace(',', '.', $_POST['prezzo']); // Accetta sia virgola che punto
+    $nuovo_tipo = trim($_POST['tipo'] ?? 'Pane'); // Recupero il tipo
+    $nuovo_prezzo = str_replace(',', '.', $_POST['prezzo']);
     $nuova_descrizione = trim($_POST['descrizione']);
-    $nuovi_ingredienti = $_POST['ingredienti'] ?? []; // Array degli ingredienti selezionati
+    $nuovi_ingredienti = $_POST['ingredienti'] ?? [];
 
     try {
         $pdo->beginTransaction();
-
-        // Aggiorniamo i dati base del prodotto
-        $stmt_update = $pdo->prepare("UPDATE tprodotto SET prezzo = ?, descrizione = ? WHERE nome = ?");
-        $stmt_update->execute([$nuovo_prezzo, $nuova_descrizione, $nome_prodotto]);
+        // Aggiorniamo i dati base del prodotto includendo il tipo
+        $stmt_update = $pdo->prepare("UPDATE tprodotto SET tipo = ?, prezzo = ?, descrizione = ? WHERE nome = ?");
+        $stmt_update->execute([$nuovo_tipo, $nuovo_prezzo, $nuova_descrizione, $nome_prodotto]);
 
         // Aggiorniamo la composizione (cancelliamo i vecchi e inseriamo i nuovi)
         $stmt_delete_comp = $pdo->prepare("DELETE FROM tcomposizione WHERE nome_prodotto = ?");
@@ -152,8 +152,12 @@ $tutti_ingredienti = $pdo->query("SELECT nome FROM tingrediente ORDER BY nome AS
                 </div>
                 <div class="form-row">
                     <div class="form-col">
-                        <label class="form-label">Nome Prodotto (Non modificabile)</label>
-                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($prodotto_attuale['nome']); ?>" readonly style="background-color: #f8f9fa; color: #6c757d; cursor: not-allowed;">
+                        <label class="form-label">Nome Prodotto</label>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($prodotto_attuale['nome']); ?>" readonly style="background-color: #f8f9fa; color: #6c757d; cursor: not-allowed;" title="Il nome non è modificabile">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Tipo Prodotto</label>
+                        <input type="text" name="tipo" class="form-control" value="<?php echo htmlspecialchars($prodotto_attuale['tipo'] ?? 'Pane'); ?>" required>
                     </div>
                     <div class="form-col">
                         <label class="form-label">Prezzo (€)</label>
@@ -164,7 +168,7 @@ $tutti_ingredienti = $pdo->query("SELECT nome FROM tingrediente ORDER BY nome AS
                 <div class="form-row">
                     <div class="form-col">
                         <label class="form-label">Descrizione</label>
-                        <textarea name="descrizione" class="form-control" rows="4" required><?php echo htmlspecialchars($prodotto_attuale['descrizione']); ?></textarea>
+                        <textarea name="descrizione" class="form-control" rows="4"><?php echo htmlspecialchars($prodotto_attuale['descrizione']); ?></textarea>
                     </div>
                 </div>
 

@@ -84,7 +84,16 @@ try {
             <?php if($errore) echo "<div class='alert alert-error'>$errore</div>"; ?>
             
             <form action="" method="POST" enctype="multipart/form-data">
-                <div class="form-row"><div class="form-col" style="align-items: center;"><label class="form-label">Nome Prodotto</label><input type="text" name="nome_prodotto" class="form-control" style="width: 60%; text-align: center;" required></div></div>
+                <div class="form-row">
+                    <div class="form-col" style="align-items: center;">
+                        <label class="form-label">Nome Prodotto</label>
+                        <input type="text" name="nome_prodotto" class="form-control" style="width: 80%; text-align: center;" required>
+                    </div>
+                    <div class="form-col" style="align-items: center;">
+                        <label class="form-label">Tipo (es. Pane, Pizza, Dolce)</label>
+                        <input type="text" name="tipo" class="form-control" style="width: 80%; text-align: center;" placeholder="es. Pane" required>
+                    </div>
+                </div>
                 <div class="form-row">
                     <div class="form-col">
                         <label class="form-label">Inserimento Immagini</label>
