@@ -74,13 +74,36 @@ try {
             <?php if($messaggio) echo "<div class='alert alert-success'>$messaggio</div>"; ?>
             <?php if($errore) echo "<div class='alert alert-error'>$errore</div>"; ?>
             <form action="" method="POST" enctype="multipart/form-data">
-                <div class="form-row"><div class="form-col" style="align-items: center;"><label class="form-label">Nome Ingrediente</label><input type="text" name="nome_ingrediente" class="form-control" style="width: 60%; text-align: center;" required></div></div>
-                <div class="form-row">
-                    <div class="form-col"><label class="form-label">Inserimento Immagini (puoi selezionarne di più)</label><input type="file" name="immagini_ingrediente[]" multiple class="form-control" style="padding: 9px;" accept="image/*"></div>
-                    <div class="form-col"><label class="form-label">In caso sia farina specificare il tipo..</label><input type="text" name="tipo_ingrediente" class="form-control" placeholder="es. Tipo 0, Integrale"></div>
+                <div style="background: #FFF8E7; border-left: 4px solid #F4A261; padding: 15px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9rem; color: #4A3320;">
+                    <strong>💡 Come inserire le varianti (es. Farine):</strong> Il nome dell'ingrediente deve essere unico. Se aggiungi più tipi di uno stesso prodotto, specificalo direttamente nel nome. <br>
+                    <em>✅ Corretto: "Farina Tipo 0", "Farina Integrale".<br>
+                    ❌ Sbagliato: Chiamarle tutte "Farina".</em>
                 </div>
-                <div class="form-row"><div class="form-col"><label class="form-label">Descrizione</label><textarea name="descrizione" class="form-control" rows="4"></textarea></div></div>
-                <div style="display: flex; justify-content: flex-end; margin-top: 20px;"><button type="submit" class="btn btn-purple">Salva Ingrediente</button></div>
+
+                <div class="form-row">
+                    <div class="form-col" style="align-items: center;">
+                        <label class="form-label">Nome Ingrediente (Univoco)</label>
+                        <input type="text" name="nome_ingrediente" class="form-control" style="width: 60%; text-align: center;" placeholder="Es. Farina Tipo 0, Farina integrale, Sale, Lievito..." required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Categoria / Tipo (Opzionale)</label>
+                        <input type="text" name="tipo_ingrediente" class="form-control" placeholder="Es. Tipo 0, Integrale...">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">Descrizione</label>
+                        <textarea name="descrizione" class="form-control" rows="4"></textarea>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                    <button type="submit" class="btn btn-purple">Salva Ingrediente</button>
+                </div>
             </form>
         </div>
     </main>
